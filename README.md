@@ -2,4 +2,4 @@ Android Simple ToDo App
 ========================
 
 
-(https://github.com/snambi/android_todoapp/raw/master/demos/firstversion.gif)
+(https://raw.githubusercontent.com/snambi/android_todoapp/master/demos/firstversion.gif)
