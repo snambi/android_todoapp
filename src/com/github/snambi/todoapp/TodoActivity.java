@@ -7,15 +7,20 @@ import java.util.ArrayList;
 import org.apache.commons.io.FileUtils;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
 public class TodoActivity extends Activity {
+	
+	public static final int REQUEST_CODE = 100;
+	public static final int RESPONSE_CODE = 200;
 
 	private ArrayList<String> items;
 	private ArrayAdapter<String> itemsAdapter;
@@ -50,7 +55,24 @@ public class TodoActivity extends Activity {
     	saveItems();
     }
     
+    protected void onActivityResult( int requestCode, int responseCode, Intent data){
+    	if( requestCode == REQUEST_CODE && responseCode == RESPONSE_CODE ){
+    		if( data != null ){
+    			String newitem = data.getStringExtra("ITEM");
+    			int position = data.getIntExtra("ROW", 0);
+    			
+    			// update the value of "item" at index 'position'
+    			if( !items.get(position).equals(newitem) ){
+    				items.set(position, newitem);
+    				itemsAdapter.notifyDataSetChanged();
+    			}
+    		}
+    	}
+    }
+    
     private void setupListViewListener(){
+    	
+    	// set up call back to delete an item
     	listviewItems.setOnItemLongClickListener( new OnItemLongClickListener() {
 
 			@Override
@@ -63,6 +85,27 @@ public class TodoActivity extends Activity {
 				
 				saveItems();
 				return true;
+			}
+		});
+    	
+    	// set up call back to edit an item
+    	listviewItems.setOnItemClickListener( new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, 
+					View view, 
+					int position,
+					long rowId) {
+				
+				String selectedItem = items.get(position);
+				
+				Intent intent = new Intent(TodoActivity.this, EditItemActivity.class);
+				intent.putExtra("ITEM", selectedItem);
+				intent.putExtra("ROW",  position);
+				
+				// start the activity
+				//startActivity(intent);
+				startActivityForResult(intent, 100);
 			}
 		});
     }
