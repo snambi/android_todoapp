@@ -1,2 +1,4 @@
-android_todoapp
-===============
+Android Simple ToDo App
+========================
+
+
