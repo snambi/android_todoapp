@@ -8,6 +8,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
+/**
+ * Activity to edit an existing item.
+ * 
+ * @author snambi
+ */
 public class EditItemActivity extends Activity {
 	
 	private EditText itemEditText;

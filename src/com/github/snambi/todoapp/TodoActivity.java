@@ -3,6 +3,7 @@ package com.github.snambi.todoapp;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
@@ -17,13 +18,23 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.github.snambi.todoapp.db.TodoItem;
+import com.github.snambi.todoapp.db.TodoItemsDataSource;
+
+/**
+ * Default activity that lists all the activities in the main page.
+ * 
+ * @author snambi
+ */
 public class TodoActivity extends Activity {
 	
 	public static final int REQUEST_CODE = 100;
 	public static final int RESPONSE_CODE = 200;
 
-	private ArrayList<String> items;
-	private ArrayAdapter<String> itemsAdapter;
+	private List<TodoItem> items;
+	private ArrayAdapter<TodoItem> itemsAdapter;
+	private TodoItemsDataSource itemsDataSource;
+	
 	private ListView listviewItems;
 	private EditText etNewItem;
 	
@@ -32,27 +43,34 @@ public class TodoActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_todo);
         
-        items = new ArrayList<String>();
+        // open database
+        itemsDataSource = new TodoItemsDataSource(this);
+        itemsDataSource.open();
+        
+        items = new ArrayList<TodoItem>();
         listviewItems = (ListView) findViewById(R.id.lvItems);
         etNewItem = (EditText) findViewById(R.id.etAddNewItem);
         
-        readItems();
-        itemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
-        listviewItems.setAdapter(itemsAdapter);
+        //readItems();
+        readItemsFromDb();
         
-        //items.add("Item 1");
-        //items.add("Item 2");
+        itemsAdapter = new ArrayAdapter<TodoItem>(this, android.R.layout.simple_list_item_1, items);
+        listviewItems.setAdapter(itemsAdapter);
         
         setupListViewListener();
     }
     
     public void addTodoItem( View v){
     	String text = etNewItem.getText().toString();
-    	items.add(text);
+    	TodoItem item = new TodoItem();
+    	item.setDescription(text);
+    	
+    	items.add( item );
     	itemsAdapter.notifyDataSetChanged();
+    	
     	etNewItem.setText("");
     	
-    	saveItems();
+    	saveItemDb( item);
     }
     
     protected void onActivityResult( int requestCode, int responseCode, Intent data){
@@ -63,8 +81,12 @@ public class TodoActivity extends Activity {
     			
     			// update the value of "item" at index 'position'
     			if( !items.get(position).equals(newitem) ){
-    				items.set(position, newitem);
+    				TodoItem item = items.get(position);
+    				item.setDescription(newitem);
     				itemsAdapter.notifyDataSetChanged();
+    				
+    				// update the item in DB
+    				saveItemDb(item);
     			}
     		}
     	}
@@ -80,10 +102,13 @@ public class TodoActivity extends Activity {
 										View view,
 										int position, 
 										long rowId) {
-				items.remove(position);
+				TodoItem item = items.remove(position);
+				//delete item from DB
+				deleteItem(item);
+				
 				itemsAdapter.notifyDataSetChanged();
 				
-				saveItems();
+				//saveItems();
 				return true;
 			}
 		});
@@ -97,10 +122,10 @@ public class TodoActivity extends Activity {
 					int position,
 					long rowId) {
 				
-				String selectedItem = items.get(position);
+				TodoItem selectedItem = items.get(position);
 				
 				Intent intent = new Intent(TodoActivity.this, EditItemActivity.class);
-				intent.putExtra("ITEM", selectedItem);
+				intent.putExtra("ITEM", selectedItem.getDescription());
 				intent.putExtra("ROW",  position);
 				
 				// start the activity
@@ -110,18 +135,43 @@ public class TodoActivity extends Activity {
 		});
     }
     
+    private void readItemsFromDb(){
+    	items = itemsDataSource.getAllItems();
+    }
+    
     private void readItems(){
     	File filesDir = getFilesDir();
     	File todoFile = new File( filesDir, "todo.txt");
     	
+    	items = new ArrayList<TodoItem>();
     	try {
-			items = new ArrayList<String>(FileUtils.readLines(todoFile));
+    		
+			List<String> stritems = new ArrayList<String>(FileUtils.readLines(todoFile));
+			for( String itm : stritems ){
+				TodoItem i = new TodoItem();
+				i.setDescription(itm);
+				items.add(i);
+			}
 		} catch (IOException e) {
-			items = new ArrayList<String>();
+			
 			e.printStackTrace();
 		}
     }
     
+    private void deleteItem( TodoItem item){
+    	itemsDataSource.deleteTodoItem(item);
+    }
+    
+    // saves one item : that is updates or inserts one item.
+    private void saveItemDb( TodoItem item ){
+    	itemsDataSource.saveItem(item);
+    }
+    
+    // saves all items
+    private void saveItemsDb(){
+    	itemsDataSource.saveItems(items);
+    }
+        
     private void saveItems(){
     	File filesDir = getFilesDir();
     	File todoFile = new File( filesDir, "todo.txt");
