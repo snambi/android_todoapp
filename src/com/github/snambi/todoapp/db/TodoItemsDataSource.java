@@ -1,6 +1,9 @@
 package com.github.snambi.todoapp.db;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import android.content.ContentValues;
@@ -8,14 +11,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-import android.webkit.WebChromeClient.CustomViewCallback;
 
 public class TodoItemsDataSource {
 	
 	private SQLiteDatabase database;
 	private ToDoSqlLiteHelper dbHelper;
 	private String[] allColumns = { ToDoSqlLiteHelper.SQL_COL_ITEM_ID, 
-									ToDoSqlLiteHelper.SQL_COL_ITEM_DESC};
+									ToDoSqlLiteHelper.SQL_COL_ITEM_DESC,
+									ToDoSqlLiteHelper.SQL_COL_ITEM_DUEDATE };
 	
 	public TodoItemsDataSource( Context context) {
 		dbHelper = new ToDoSqlLiteHelper(context);
@@ -30,10 +33,24 @@ public class TodoItemsDataSource {
 	}
 	
 	public static TodoItem convertCursorToDoItem(Cursor cursor){
+		
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+		
 		TodoItem item = new TodoItem();
 		if( cursor != null && !cursor.isClosed() ){
+			
 			item.setId(cursor.getLong(0));
 			item.setDescription(cursor.getString(1));
+			Date date=null;
+			
+			try {
+				if( cursor.getString(2) != null ){
+					date = dateFormat.parse(cursor.getString(2));
+				}
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			item.setDueDate(date);
 		}
 		
 		return item;
@@ -43,6 +60,7 @@ public class TodoItemsDataSource {
 		ContentValues values = new ContentValues();
 		
 		values.put(ToDoSqlLiteHelper.SQL_COL_ITEM_DESC, item.getDescription());
+		values.put(ToDoSqlLiteHelper.SQL_COL_ITEM_DUEDATE, item.getDueDateString());
 		
 		long insertId = database.insert( ToDoSqlLiteHelper.SQL_TABLE_TODOITEMS, null, values);
 		Cursor cursor = database.query( ToDoSqlLiteHelper.SQL_TABLE_TODOITEMS, 
@@ -89,6 +107,7 @@ public class TodoItemsDataSource {
 	public void updateToDoItem( TodoItem item){
 		ContentValues values = new ContentValues();
 		values.put(ToDoSqlLiteHelper.SQL_COL_ITEM_DESC, item.getDescription());
+		values.put(ToDoSqlLiteHelper.SQL_COL_ITEM_DUEDATE, item.getDueDateString());
 		
 		database.update(ToDoSqlLiteHelper.SQL_TABLE_TODOITEMS, values, 
 							ToDoSqlLiteHelper.SQL_COL_ITEM_ID + "=" + item.getId(), 

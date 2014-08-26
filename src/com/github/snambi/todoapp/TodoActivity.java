@@ -2,11 +2,15 @@ package com.github.snambi.todoapp;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,7 +18,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
@@ -32,7 +35,8 @@ public class TodoActivity extends Activity {
 	public static final int RESPONSE_CODE = 200;
 
 	private List<TodoItem> items;
-	private ArrayAdapter<TodoItem> itemsAdapter;
+	//private ArrayAdapter<TodoItem> itemsAdapter;
+	private ItemsArrayAdapter<TodoItem> itemsAdapter;
 	private TodoItemsDataSource itemsDataSource;
 	
 	private ListView listviewItems;
@@ -54,7 +58,8 @@ public class TodoActivity extends Activity {
         //readItems();
         readItemsFromDb();
         
-        itemsAdapter = new ArrayAdapter<TodoItem>(this, android.R.layout.simple_list_item_1, items);
+        //itemsAdapter = new ArrayAdapter<TodoItem>(this, android.R.layout.simple_list_item_activated_1, items);
+        itemsAdapter = new ItemsArrayAdapter<TodoItem>(this, items);
         listviewItems.setAdapter(itemsAdapter);
         
         setupListViewListener();
@@ -73,16 +78,28 @@ public class TodoActivity extends Activity {
     	saveItemDb( item);
     }
     
+    
     protected void onActivityResult( int requestCode, int responseCode, Intent data){
     	if( requestCode == REQUEST_CODE && responseCode == RESPONSE_CODE ){
     		if( data != null ){
     			String newitem = data.getStringExtra("ITEM");
     			int position = data.getIntExtra("ROW", 0);
+    			String dueDate = data.getStringExtra("DUE_DATE");
+    			
+    			Date newDueDate=null;
+    			SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+    			try {
+					newDueDate = dateFormat.parse(dueDate);
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
     			
     			// update the value of "item" at index 'position'
     			if( !items.get(position).equals(newitem) ){
+    				
     				TodoItem item = items.get(position);
     				item.setDescription(newitem);
+    				item.setDueDate(newDueDate);
     				itemsAdapter.notifyDataSetChanged();
     				
     				// update the item in DB
