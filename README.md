@@ -1,15 +1,15 @@
-Android Simple ToDo App
-========================
+# Android Simple ToDo App
 
-First version
+## First version
 
 Ability to add, modify and delete a todo item
-https://raw.githubusercontent.com/snambi/android_todoapp/master/demos/firstversion.gif
+![alt text](https://raw.githubusercontent.com/snambi/android_todoapp/master/demos/firstversion.gif "First Version Demo" )
 
-Second version
+## Second version
 
 Using SQLite for persistence
+![alt text](https://raw.githubusercontent.com/snambi/android_todoapp/master/demos/firstversion.gif "SQLite Version Demo" )
 
-Third Version
+## Third Version
 Added due date.
-https://raw.githubusercontent.com/snambi/android_todoapp/master/demos/secondversion.gif
+![alt text](https://raw.githubusercontent.com/snambi/android_todoapp/master/demos/secondversion.gif "Due Date")
